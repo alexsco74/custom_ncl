@@ -1,0 +1,5 @@
+name = Custom node content links
+description = Custom node content links
+package = Custom
+version = VERSION
+core = 7.x

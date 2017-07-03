@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @file
+ * Custom node content links
+ */
+
+/**
+ * Implement hook_form_FORM_ID_alter().
+ */
+function custom_ncl_form_node_type_form_alter(&$form, $form_state) {
+
+  // Add the node-type specific page title settings to the additional settings section
+  $form['custom_ncl'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Node links settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+    '#group' => 'additional_settings',
+  );
+
+  $form['custom_ncl']['show_delete_link'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Delete link show in teaser'),
+    '#description' => t('If checked, the <em>delete link</em> show in links in teaser.'),
+    '#default_value' => variable_get('custom_ncl_type_' . $form['#node_type']->type . '_show_delete_link', FALSE),
+  );
+
+  $form['#submit'][] = 'custom_ncl_node_type_form_submit';
+}
+
+/**
+ * Submit handler for the node_type_form element added in the hook_form_FORM_ID_alter() above.
+ */
+function custom_ncl_node_type_form_submit($form, &$form_state) {
+  variable_set('custom_ncl_type_' . $form_state['values']['type'] . '_show_delete_link', $form_state['values']['custom_ncl']['show_delete_link']);
+
+  // For some reason the node module adds the fieldset as a separate entry in the variables table... we dont want this!
+  variable_del('custom_ncl_' . $form_state['values']['type']);
+}
+
+function custom_ncl_node_view($node, $build_mode) {
+  if ($build_mode == 'teaser' && variable_get('custom_ncl_type_' . $node->type . '_show_delete_link', FALSE) && node_access('delete', $node)) {
+    $node->content['links']['node']['#links']['custom_ncl_delete_link'] = array(
+      'title' => t('Delete'),
+      'href' => 'node/' . $node->nid . '/delete',
+      'html' => TRUE,
+      'query' => array('destination' => $_GET['q']),
+      'attributes' => array('rel' => 'tag', 'title' => t('Delete')),
+    );
+  }
+}
